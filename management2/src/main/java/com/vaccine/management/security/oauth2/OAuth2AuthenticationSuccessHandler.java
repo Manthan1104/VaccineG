@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value; // <-- IMPORT THIS
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -29,6 +30,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
 
+    @Value("${app.oauth2.redirectUri}") // <-- ADD THIS
+    private String frontendRedirectUrl;   // <-- AND THIS
 
     public OAuth2AuthenticationSuccessHandler(JwtUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
@@ -43,7 +46,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         log.info("OAuth2 success for user email: {}", email);
 
-        // Find or create the user
         User user = userRepository.findByUsername(email).orElseGet(() -> {
             log.info("User not found, creating a new user for email: {}", email);
             User newUser = new User();
@@ -51,23 +53,19 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setAuthProvider(AuthProvider.GOOGLE);
-            // Default new Google sign-ups to the PARENT role
             newUser.setRoles(Collections.singleton(Role.ROLE_PARENT));
             return userRepository.save(newUser);
         });
 
-        // Create UserDetails to generate the token
         UserDetails userDetails = new MyUserDetailsService.CustomUserDetails(user);
-
         String token = jwtUtil.generateToken(userDetails);
-        
-        // The target URL to redirect to on the frontend
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:8080/")
+
+        // --- THIS PART IS NOW DYNAMIC ---
+        String targetUrl = UriComponentsBuilder.fromUriString(frontendRedirectUrl)
                 .queryParam("token", token)
                 .build().toUriString();
-        
+
         log.info("Redirecting user {} to target URL with token", email);
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 }
-
