@@ -363,10 +363,9 @@
         </div>
     </div>
 
-
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const API_BASE_URL = 'http://localhost:8080';
+        const API_BASE_URL = ''; // Use relative path for deployed app
 
         // --- State ---
         let availableVaccines = [];
@@ -450,13 +449,12 @@
 
         // --- **PERFECTED** API & Auth Logic ---
         const apiRequest = async (endpoint, options = {}) => {
-            let response; 
             try {
                 const token = localStorage.getItem('token');
                 const headers = { 'Content-Type': 'application/json', ...options.headers };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
                 
                 const responseText = await response.text();
 
@@ -472,8 +470,10 @@
                     }
                     
                     if (response.status === 401 || response.status === 403) {
-                        handleLogout();
-                        throw new Error('Session expired or unauthorized. Please log in again.');
+                        if(endpoint !== '/api/auth/login' && endpoint !== '/api/auth/signup') {
+                            handleLogout();
+                            throw new Error('Session expired or unauthorized. Please log in again.');
+                        }
                     }
                     throw new Error(errorMessage);
                 }
@@ -486,7 +486,10 @@
                 if (err instanceof TypeError) {
                     userMessage = 'Could not connect to the server. Is it running?';
                 }
-                showNotification(userMessage, true);
+                // Don't show a notification for login/signup failures, as they're handled in the form.
+                if(endpoint !== '/api/auth/login' && endpoint !== '/api/auth/signup') {
+                    showNotification(userMessage, true);
+                }
                 throw err;
             }
         };
@@ -558,6 +561,8 @@
                 if (data && data.jwt) {
                     localStorage.setItem('token', data.jwt);
                     setupDashboard(parseJwt(data.jwt));
+                } else {
+                    throw new Error("Login failed. No token received.");
                 }
             } catch (err) { loginErrorMessage.textContent = err.message; }
         });
@@ -707,7 +712,7 @@
                 viewNotificationsBtn.classList.remove('hidden');
                 parentUserId.textContent = userId;
                 fetchParentData();
-                fetchNotifications(true); // Check for new notifications silently
+                fetchNotifications(true); 
             }
             lucide.createIcons();
         };
@@ -840,4 +845,3 @@
     </script>
 </body>
 </html>
-
