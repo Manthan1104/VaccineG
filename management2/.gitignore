@@ -1,0 +1,6 @@
+# Sensitive files
+application.properties
+*.key
+*.pem
+target/
+.env
