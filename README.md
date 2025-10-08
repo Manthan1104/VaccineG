@@ -155,7 +155,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ## 👨‍💻 Author
 **Manthan Garg**  
-📧 [***REMOVED***@gmail.com](mailto:***REMOVED***@gmail.com)  
+📧 [manthan11016@gmail.com](mailto:manthan11016@gmail.com)  
 🌐 [GitHub](https://github.com/Manthan1104) | [LinkedIn](https://www.linkedin.com/in/manthan-garg-b96838317)  
 
 > Built with ❤️ to promote better health management and vaccination awareness.
